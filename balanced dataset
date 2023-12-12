@@ -1,0 +1,17 @@
+from imblearn.under_sampling import RandomUnderSampler
+
+# Assuming 'data_f' is your DataFrame with a 'target' column
+X1 = data_f.drop(columns=['target'])
+y1 = data_f['target']
+
+# Create a RandomUnderSampler instance
+undersampler = RandomUnderSampler(sampling_strategy='auto', random_state=42)
+
+# Fit and transform the data to perform random undersampling
+X_undersampled, y_undersampled = undersampler.fit_resample(X1, y1)
+
+# Create a new DataFrame with the balanced data
+balanced_data = pd.concat([pd.DataFrame(X_undersampled, columns=X1.columns), pd.Series(y_undersampled, name='target')], axis=1)
+
+# Print the first few rows of the balanced dataset
+print(balanced_data.head())

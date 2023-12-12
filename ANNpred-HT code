@@ -1,0 +1,71 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, roc_curve, auc
+from sklearn.preprocessing import StandardScaler
+from keras.models import Sequential
+from keras.layers import Dense, Dropout
+import matplotlib.pyplot as plt
+from sklearn.metrics import cohen_kappa_score, matthews_corrcoef, f1_score, precision_score, recall_score, accuracy_score, roc_auc_score
+
+# Assuming x1, y1 are already defined
+
+# Split the data into train and test sets
+X_train, X_test, y_train, y_test = train_test_split(x1, y1, test_size=0.2, random_state=42)
+
+# Normalize the input data
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Define the ANN model
+model_ann = Sequential([
+    Dense(64, activation='relu', input_shape=(X_train.shape[1],)),
+    Dropout(0.5),
+    Dense(32, activation='relu'),
+    Dropout(0.5),
+    Dense(2, activation='softmax')
+])
+
+# Compile the model
+model_ann.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+# Train the model
+epochs = 50
+batch_size = 32
+model_ann.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, validation_data=(X_test, y_test), verbose=1)
+
+# Make predictions on the test set
+y_pred_prob = model_ann.predict(X_test)
+y_pred = np.argmax(y_pred_prob, axis=1)
+
+# Confusion Matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+TN, FP, FN, TP = conf_matrix.ravel()
+
+# Specificity and Sensitivity
+specificity = TN / (TN + FP)
+sensitivity = TP / (TP + FN)
+
+# AUC Score
+auc_score = roc_auc_score(y_test, y_pred_prob[:, 1])
+
+# Plot ROC Curve
+fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob[:, 1])
+roc_auc = auc(fpr, tpr)
+
+plt.figure(figsize=(8, 8))
+plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic Curve')
+plt.legend(loc="lower right")
+plt.show()
+
+# Print Metrics
+print("Specificity:", specificity)
+print("Sensitivity:", sensitivity)
+print("AUC Score:", auc_score)
